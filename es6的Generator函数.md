@@ -31,7 +31,7 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
     console.log(g.next()); //{done:true,value:2}
 
 * yield只能在generator函数中使用，否则回发生错误。
-* 返回的为遍历器对象，所以可以使用for...of直接遍历取值。
+* 返回的为遍历器对象，所以可以使用for...of直接遍历取值。由于当done为true时，for...of会停止取值，所以最后return后面的值不会被遍历出来。
 * yield可以在任何位置，在表达式中时需要加括号
 
 如：
@@ -74,3 +74,4 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
     // value
 
 
+* next传的值为上一个yield的值，所以第一个next无法传值。
