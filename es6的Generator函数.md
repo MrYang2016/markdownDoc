@@ -75,3 +75,105 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
 
 
 * next传的值为上一个yield的值，所以第一个next无法传值。
+####Generator.prototype.throw()
+可以通过属性throw对generator函数内部抛出信号，让catch接收，如
+
+	let generatorFun = function* () {
+        try{
+            yield ;
+        }catch(e){
+            console.log('内部捕获：'+e); //捕获throw抛出的错误，输出"yang"
+        }
+    };
+    let g = generatorFun();
+    g.next();
+    try{
+        g.throw('yang');  //抛出字符串“yang”
+        g.throw('yao');
+    }catch(e){
+        console.log('外部捕获：'+e)
+    }
+    //输出
+    //内部捕获：yang
+    //内部捕获：yao
+
+第一个throw被generator内部接收，因为catch只能触发一次，所以第二个被外面的catch接收。
+
+* generator的throw和全局的throw是不同的，全局的throw只能被generator外面的catch捕获。
+* 如果没有catch捕获throw，则写throw会导致报错。
+* throw执行后，会附带指令yield
+
+如
+
+	let generatorFun = function* () {
+       try{
+           console.log('yang');
+           yield 'yang';
+       }catch(e){
+            console.log(e+'yao');
+       }
+       console.log('lin');
+       yield 'lin';
+	};
+	let g = generatorFun();
+	g.next();
+	console.log(g.throw('mine'));
+	//输出
+	//yang
+	//mineyao
+	//lin
+	//{value: "lin", done: false}
+* 如果generator函数内部发生错误，则可以被函数外部的catch捕获。发生错误后，函数再执行next时会认为已经结束，即返回value为undefined，done为true。
+
+####Generator.prototype.return()
+当执行return时，generator函数返回的遍历器对象会终止遍历，如
+
+	let generatorFun = function* (){
+        yield 'yang';
+        yield 'yao';
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next());         //{value: "yang", done: false}
+    console.log(g.return('over')); //{value: "over", done: true}
+    console.log(g.next());         //{value: undefined, done: true}
+上面遍历到第二个是执行了return，此时遍历器遍历结束，后面再执行next会返回done为true。
+
+如果在执行到try后，再调用return，并且try附有finally，则后面的next会继续执行完finally里面的yield，如
+
+	let generatorFun = function* (){
+        yield 'yang';
+        try{
+            yield 'yao';
+        }finally {
+            yield 'a';
+            yield 'b';
+        }
+
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next());         //{value: "yang", done: false}
+    console.log(g.next());         //{value: "yao", done: false}
+    console.log(g.return('over')); //{value: "a", done: false}
+    console.log(g.next());         //{value: "b", done: false}
+    console.log(g.next());         //{value: "over", done: true}
+
+####yield*表达式
+将两个generator函数结合起来，如
+
+	let generatorFun1 = function*(){
+        yield 'other'
+    };
+    let generatorFun = function* (){
+        yield 'yang';
+        yield* generatorFun1();
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next().value); //yang
+    console.log(g.next().value); //other
+    console.log(g.next().value); //lin
+
+将generator1和generator结合起来，相当于一个generator函数。
+
