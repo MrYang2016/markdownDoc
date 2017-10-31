@@ -175,5 +175,22 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
     console.log(g.next().value); //other
     console.log(g.next().value); //lin
 
-将generator1和generator结合起来，相当于一个generator函数。
+将generator1和generator结合起来，相当于一个generator函数。  
+
+* 代理generator中return的内容可以被返回引用generator的地方。
+
+####Generator函数的this
+generator函数返回的遍历器对象为generator函数的一个实例，如
+
+	let generatorFun = function* () {
+       yield 'yang';
+	};
+	generatorFun.prototype.fun = function(){
+       console.log('test');
+	};
+	let g = generatorFun();
+	g.fun(); //输出test
+
+
+
 
