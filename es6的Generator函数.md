@@ -75,3 +75,58 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
 
 
 * next传的值为上一个yield的值，所以第一个next无法传值。
+
+* 如果generator函数内部发生错误，则可以被函数外部的catch捕获。发生错误后，函数再执行next时会认为已经结束，即返回value为undefined，done为true。
+
+####Generator.prototype.return()
+当执行return时，generator函数返回的遍历器对象会终止遍历，如
+
+	let generatorFun = function* (){
+        yield 'yang';
+        yield 'yao';
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next());         //{value: "yang", done: false}
+    console.log(g.return('over')); //{value: "over", done: true}
+    console.log(g.next());         //{value: undefined, done: true}
+上面遍历到第二个是执行了return，此时遍历器遍历结束，后面再执行next会返回done为true。
+
+如果在执行到try后，再调用return，并且try附有finally，则后面的next会继续执行完finally里面的yield，如
+
+	let generatorFun = function* (){
+        yield 'yang';
+        try{
+            yield 'yao';
+        }finally {
+            yield 'a';
+            yield 'b';
+        }
+
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next());         //{value: "yang", done: false}
+    console.log(g.next());         //{value: "yao", done: false}
+    console.log(g.return('over')); //{value: "a", done: false}
+    console.log(g.next());         //{value: "b", done: false}
+    console.log(g.next());         //{value: "over", done: true}
+
+####yield*表达式
+将两个generator函数结合起来，如
+
+	let generatorFun1 = function*(){
+        yield 'other'
+    };
+    let generatorFun = function* (){
+        yield 'yang';
+        yield* generatorFun1();
+        yield 'lin';
+    };
+    let g = generatorFun();
+    console.log(g.next().value); //yang
+    console.log(g.next().value); //other
+    console.log(g.next().value); //lin
+
+将generator1和generator结合起来，相当于一个generator函数。
+
