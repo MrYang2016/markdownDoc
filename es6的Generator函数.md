@@ -75,7 +75,54 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
 
 
 * next传的值为上一个yield的值，所以第一个next无法传值。
+####Generator.prototype.throw()
+可以通过属性throw对generator函数内部抛出信号，让catch接收，如
 
+	let generatorFun = function* () {
+        try{
+            yield ;
+        }catch(e){
+            console.log('内部捕获：'+e); //捕获throw抛出的错误，输出"yang"
+        }
+    };
+    let g = generatorFun();
+    g.next();
+    try{
+        g.throw('yang');  //抛出字符串“yang”
+        g.throw('yao');
+    }catch(e){
+        console.log('外部捕获：'+e)
+    }
+    //输出
+    //内部捕获：yang
+    //内部捕获：yao
+
+第一个throw被generator内部接收，因为catch只能触发一次，所以第二个被外面的catch接收。
+
+* generator的throw和全局的throw是不同的，全局的throw只能被generator外面的catch捕获。
+* 如果没有catch捕获throw，则写throw会导致报错。
+* throw执行后，会附带指令yield
+
+如
+
+	let generatorFun = function* () {
+       try{
+           console.log('yang');
+           yield 'yang';
+       }catch(e){
+            console.log(e+'yao');
+       }
+       console.log('lin');
+       yield 'lin';
+	};
+	let g = generatorFun();
+	g.next();
+	console.log(g.throw('mine'));
+	//输出
+	//yang
+	//mineyao
+	//lin
+	//{value: "lin", done: false}
 * 如果generator函数内部发生错误，则可以被函数外部的catch捕获。发生错误后，函数再执行next时会认为已经结束，即返回value为undefined，done为true。
 
 ####Generator.prototype.return()
@@ -128,5 +175,19 @@ Generator函数的写法和普通函数无异，只是多了个*号，如
     console.log(g.next().value); //other
     console.log(g.next().value); //lin
 
-将generator1和generator结合起来，相当于一个generator函数。
+将generator1和generator结合起来，相当于一个generator函数。  
+
+* 代理generator中return的内容可以被返回引用generator的地方。
+
+####Generator函数的this
+generator函数返回的遍历器对象为generator函数的一个实例，如
+
+	let generatorFun = function* () {
+       yield 'yang';
+	};
+	generatorFun.prototype.fun = function(){
+       console.log('test');
+	};
+	let g = generatorFun();
+	g.fun(); //输出test
 
